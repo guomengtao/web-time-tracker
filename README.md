@@ -8,6 +8,7 @@ A Chrome extension that tracks and displays the time spent on each webpage in re
 
 - Real-time tracking of webpage visit duration
 - Visit count tracking for each webpage
+- Page title display and tracking
 - Accurate visit counting for tab switches and revisits
 - Daily statistics storage
 - Historical data viewing
@@ -15,6 +16,8 @@ A Chrome extension that tracks and displays the time spent on each webpage in re
 - Automatic updates every second
 - Local storage using Chrome's storage API
 - Midnight auto-reset for daily statistics
+- Smart URL truncation for long URLs
+- Hover to view full URLs and titles
 
 ## Installation
 
@@ -34,12 +37,22 @@ A Chrome extension that tracks and displays the time spent on each webpage in re
    - Refreshing a page
    - Returning to a previously visited tab
    - Reopening a closed tab
+6. Hover over URLs to see full addresses
+7. Page titles are displayed above URLs
+8. Currently active tab is highlighted
 
 ## Privacy
 
 All data is stored locally in your Chrome browser. No data is sent to external servers.
 
 ## Version History
+
+### v1.0.2
+- Added page title tracking and display
+- Improved URL display with smart truncation
+- Added hover functionality for full URLs
+- Enhanced active tab highlighting
+- Improved layout and styling
 
 ### v1.0.1
 - Added visit count tracking for each webpage

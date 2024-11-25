@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
   "name": "Web Time Tracker",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Track time spent on each webpage in real-time",
   "permissions": [
     "storage",
     "tabs",
-    "activeTab"
+    "activeTab",
+    "webNavigation"
   ],
   "background": {
     "service_worker": "background.js"
