@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Time Tracker</title>
+    <style>
+        body {
+            width: 350px;
+            padding: 15px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            margin: 0;
+            background: #f5f5f7;
+        }
+
+        .date-selector {
+            margin-bottom: 15px;
+            text-align: right;
+        }
+
+        .date-selector input {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            width: auto;
+            background: white;
+            color: #333;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        #timeList {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 10px;
+        }
+
+        .url-time {
+            padding: 10px;
+            margin: 5px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .url-time:last-child {
+            border-bottom: none;
+        }
+
+        .url {
+            flex: 1;
+            margin-right: 10px;
+            word-break: break-all;
+            color: #333;
+        }
+
+        .time {
+            color: #4285f4;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        /* Hover effects */
+        .url-time:hover {
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .date-selector input:hover {
+            border-color: #4285f4;
+            background-color: #f8f9fa;
+        }
+
+        .date-selector input:focus {
+            outline: none;
+            border-color: #4285f4;
+            box-shadow: 0 0 0 2px rgba(66,133,244,0.2);
+        }
+
+        .stats {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+        
+        .visits {
+            color: #666;
+            font-size: 11px;
+        }
+        
+        .time {
+            color: #4285f4;
+            font-weight: 500;
+            white-space: nowrap;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="date-selector">
+        <input type="date" id="dateSelect">
+    </div>
+    <div id="timeList"></div>
+    <script src="popup.js"></script>
+</body>
+</html> 
