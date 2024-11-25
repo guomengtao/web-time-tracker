@@ -4,6 +4,7 @@ let startTime = null;
 let lastVisitedUrls = new Map(); // Track URLs and their tab IDs
 let activeTabId = null; // Currently active tab
 let previousTabId = null; // Previously active tab
+let tabVisitTimes = new Map(); // Track last visit time for each tab
 
 // Format time in minutes and seconds
 function formatTime(ms) {
@@ -30,14 +31,20 @@ async function updateTime() {
     const dayData = data[dateKey] || {};
     
     // Format URL consistently
-    const formattedUrl = currentTab.url.replace(/\/+$/, '');
+    const formattedUrl = normalizeUrl(currentTab.url);
     
-    // Initialize or normalize URL data
-    if (!dayData[formattedUrl] || typeof dayData[formattedUrl] === 'number') {
+    // Initialize or normalize URL data with title
+    if (!dayData[formattedUrl]) {
         dayData[formattedUrl] = {
-            time: typeof dayData[formattedUrl] === 'number' ? dayData[formattedUrl] : 0,
-            visits: dayData[formattedUrl]?.visits || 1
+            time: 0,
+            visits: 1,
+            title: currentTab.title || ''
         };
+    }
+    
+    // Always update title when available
+    if (currentTab.title) {
+        dayData[formattedUrl].title = currentTab.title;
     }
     
     // Update time for current URL
@@ -102,7 +109,7 @@ function updateTabHistory(tabId) {
 }
 
 // Increment visit count for URL
-async function incrementVisitCount(url, tabId) {
+async function incrementVisitCount(url, tabId, title) {
     if (!shouldCountVisit(url, tabId)) {
         return;
     }
@@ -111,22 +118,29 @@ async function incrementVisitCount(url, tabId) {
     const data = await chrome.storage.local.get(dateKey) || {};
     const dayData = data[dateKey] || {};
     
-    const formattedUrl = url.replace(/\/+$/, '');
+    const formattedUrl = normalizeUrl(url);
     
     // Initialize or update URL data
     if (!dayData[formattedUrl]) {
         dayData[formattedUrl] = {
             time: 0,
-            visits: 1
+            visits: 1,
+            title: title || ''
         };
     } else {
         if (typeof dayData[formattedUrl] === 'number') {
             dayData[formattedUrl] = {
                 time: dayData[formattedUrl],
-                visits: 1
+                visits: 1,
+                title: title || ''
             };
+        } else {
+            dayData[formattedUrl].visits++;
+            // Update title if provided
+            if (title) {
+                dayData[formattedUrl].title = title;
+            }
         }
-        dayData[formattedUrl].visits++;
     }
     
     await chrome.storage.local.set({ [dateKey]: dayData });
@@ -166,12 +180,27 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
     if (tab.url) {
         currentTab = tab;
         startTime = Date.now();
-        await incrementVisitCount(tab.url, tab.id);
+        await incrementVisitCount(tab.url, tab.id, tab.title);
     }
 });
 
 // Handle URL changes
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+    // Listen for title changes
+    if (changeInfo.title && tab.active) {
+        const dateKey = getTodayKey();
+        const data = await chrome.storage.local.get(dateKey) || {};
+        const dayData = data[dateKey] || {};
+        
+        const formattedUrl = normalizeUrl(tab.url);
+        
+        if (dayData[formattedUrl]) {
+            dayData[formattedUrl].title = changeInfo.title;
+            await chrome.storage.local.set({ [dateKey]: dayData });
+        }
+    }
+    
+    // Handle complete status
     if (changeInfo.status === 'complete' && tab.active && tab.url) {
         if (currentTab) {
             await updateTime();
@@ -183,7 +212,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
         
         currentTab = tab;
         startTime = Date.now();
-        await incrementVisitCount(tab.url, tabId);
+        await incrementVisitCount(tab.url, tabId, tab.title);
     }
 });
 
@@ -202,10 +231,22 @@ chrome.windows.onFocusChanged.addListener(async (windowId) => {
             
             currentTab = tab;
             startTime = Date.now();
-            await incrementVisitCount(tab.url, tab.id);
+            await incrementVisitCount(tab.url, tab.id, tab.title);
         }
     }
 });
 
 // Update time periodically (every 1 second)
 setInterval(updateTime, 1000); 
+
+// Add this to the top of background.js
+function normalizeUrl(url) {
+    try {
+        const urlObj = new URL(url);
+        let normalizedUrl = (urlObj.hostname + urlObj.pathname).replace(/\/+$/, '');
+        normalizedUrl = normalizedUrl.replace(/^www\./, '');
+        return normalizedUrl;
+    } catch (e) {
+        return url.replace(/\/+$/, '');
+    }
+} 

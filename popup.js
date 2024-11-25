@@ -1,6 +1,5 @@
 // Format time in minutes and seconds
 function formatTime(ms) {
-    // Handle invalid input
     if (!ms || isNaN(ms)) {
         return '0s';
     }
@@ -18,37 +17,70 @@ function formatTime(ms) {
 function formatUrl(url) {
     try {
         const urlObj = new URL(url);
-        return (urlObj.hostname + urlObj.pathname).replace(/\/+$/, '');
+        // Normalize URL by removing trailing slashes and common variations
+        let normalizedUrl = (urlObj.hostname + urlObj.pathname).replace(/\/+$/, '');
+        // Remove www. prefix if present
+        normalizedUrl = normalizedUrl.replace(/^www\./, '');
+        return normalizedUrl;
     } catch (e) {
         return url.replace(/\/+$/, '');
     }
 }
 
-// Convert old data format to new format
-function normalizeData(data) {
-    if (typeof data === 'number') {
-        // Old format: just time
-        return {
-            time: data,
-            visits: 1
-        };
+// Merge duplicate URLs data
+function mergeDuplicateUrls(dayData) {
+    const mergedData = {};
+    
+    for (const [url, data] of Object.entries(dayData)) {
+        const normalizedUrl = formatUrl(url);
+        if (!mergedData[normalizedUrl]) {
+            mergedData[normalizedUrl] = {
+                time: 0,
+                visits: 0,
+                title: data.title || ''
+            };
+        } else {
+            // Keep the most recent title if available
+            if (data.title) {
+                mergedData[normalizedUrl].title = data.title;
+            }
+        }
+        mergedData[normalizedUrl].time += data.time || 0;
+        mergedData[normalizedUrl].visits += data.visits || 0;
     }
-    // New format or invalid data
-    return {
-        time: data?.time || 0,
-        visits: data?.visits || 0
-    };
+    
+    return mergedData;
+}
+
+// Add this function to get current tab's URL
+async function getCurrentTabUrl() {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tabs[0] && tabs[0].url) {
+        return formatUrl(tabs[0].url);
+    }
+    return null;
 }
 
 // Update only time values without recreating elements
 async function updateTimeValues(dateKey) {
     const data = await chrome.storage.local.get(dateKey);
-    const dayData = data[dateKey] || {};
+    const rawDayData = data[dateKey] || {};
+    const dayData = mergeDuplicateUrls(rawDayData);
     const timeElements = document.querySelectorAll('.url-time');
+    
+    // Get current tab URL
+    const currentUrl = await getCurrentTabUrl();
     
     timeElements.forEach(element => {
         const url = element.dataset.url;
-        const urlData = normalizeData(dayData[url]);
+        const urlData = dayData[url] || { time: 0, visits: 0 };
+        
+        // Update current-url class
+        if (url === currentUrl) {
+            element.classList.add('current-url');
+        } else {
+            element.classList.remove('current-url');
+        }
         
         const timeElement = element.querySelector('.time');
         timeElement.textContent = formatTime(urlData.time);
@@ -58,19 +90,38 @@ async function updateTimeValues(dateKey) {
     });
 }
 
+// Add this function to format URL for display
+function formatDisplayUrl(url) {
+    try {
+        const urlObj = new URL(url);
+        let host = urlObj.hostname.replace(/^www\./, '');
+        let path = urlObj.pathname;
+        
+        // If path is too long, truncate it
+        if (path.length > 20) {
+            path = path.substring(0, 20) + '...';
+        }
+        
+        return host + path;
+    } catch (e) {
+        return url;
+    }
+}
+
 // Initial display of time data
 async function displayTimeData(dateKey) {
     const timeList = document.getElementById('timeList');
     timeList.innerHTML = '';
     
+    // Get current tab URL
+    const currentUrl = await getCurrentTabUrl();
+    
     // Get data for selected date
     const data = await chrome.storage.local.get(dateKey);
     const rawDayData = data[dateKey] || {};
     
-    // Normalize all data entries
-    const dayData = Object.fromEntries(
-        Object.entries(rawDayData).map(([url, data]) => [url, normalizeData(data)])
-    );
+    // Merge and normalize data
+    const dayData = mergeDuplicateUrls(rawDayData);
     
     // Sort URLs by time spent (descending)
     const sortedUrls = Object.entries(dayData)
@@ -88,11 +139,29 @@ async function displayTimeData(dateKey) {
     for (const [url, urlData] of sortedUrls) {
         const div = document.createElement('div');
         div.className = 'url-time';
+        if (url === currentUrl) {
+            div.classList.add('current-url');
+        }
         div.dataset.url = url;
+        
+        const urlContainer = document.createElement('div');
+        urlContainer.className = 'url-container';
+        
+        // Add title if it exists and is different from URL
+        if (urlData.title && urlData.title !== url) {
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'page-title';
+            titleDiv.textContent = urlData.title;
+            titleDiv.title = urlData.title; // Show full title on hover
+            urlContainer.appendChild(titleDiv);
+        }
         
         const urlDiv = document.createElement('div');
         urlDiv.className = 'url';
-        urlDiv.textContent = formatUrl(url);
+        urlDiv.textContent = formatDisplayUrl(url);
+        urlDiv.title = url; // Show full URL on hover
+        
+        urlContainer.appendChild(urlDiv);
         
         const statsDiv = document.createElement('div');
         statsDiv.className = 'stats';
@@ -108,7 +177,7 @@ async function displayTimeData(dateKey) {
         statsDiv.appendChild(timeDiv);
         statsDiv.appendChild(visitsDiv);
         
-        div.appendChild(urlDiv);
+        div.appendChild(urlContainer);
         div.appendChild(statsDiv);
         timeList.appendChild(div);
     }

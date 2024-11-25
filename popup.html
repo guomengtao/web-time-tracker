@@ -43,17 +43,42 @@
             justify-content: space-between;
             align-items: center;
             font-size: 13px;
+            transition: background-color 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
         }
 
-        .url-time:last-child {
-            border-bottom: none;
+        .current-url {
+            background-color: #e8f0fe;
+            border-radius: 4px;
+        }
+
+        .current-url .url {
+            color: #1a73e8;
+            font-weight: 500;
+        }
+
+        .current-url .time {
+            color: #1967d2;
+        }
+
+        .url-container {
+            flex: 1;
+            min-width: 0;
+            margin-right: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .url {
-            flex: 1;
-            margin-right: 10px;
-            word-break: break-all;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
             color: #333;
+            transition: color 0.2s ease;
+            width: 100%;
+            font-size: 13px;
         }
 
         .time {
@@ -91,6 +116,7 @@
             flex-direction: column;
             align-items: flex-end;
             gap: 4px;
+            flex-shrink: 0;
         }
         
         .visits {
@@ -103,6 +129,16 @@
             font-weight: 500;
             white-space: nowrap;
             font-size: 13px;
+        }
+
+        /* Add styles for title */
+        .page-title {
+            font-size: 12px;
+            color: #666;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-bottom: 2px;
         }
     </style>
 </head>
