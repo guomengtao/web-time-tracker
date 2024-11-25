@@ -7,11 +7,14 @@ A Chrome extension that tracks and displays the time spent on each webpage in re
 ## Features
 
 - Real-time tracking of webpage visit duration
+- Visit count tracking for each webpage
+- Accurate visit counting for tab switches and revisits
 - Daily statistics storage
 - Historical data viewing
 - Time display in minutes and seconds
 - Automatic updates every second
 - Local storage using Chrome's storage API
+- Midnight auto-reset for daily statistics
 
 ## Installation
 
@@ -24,9 +27,28 @@ A Chrome extension that tracks and displays the time spent on each webpage in re
 
 1. Click the extension icon to view today's statistics
 2. Use the date selector to view historical data
-3. Times are automatically updated in real-time
+3. Times and visit counts are automatically updated in real-time
 4. Data is saved locally in your browser
+5. Visit counts increment when:
+   - Opening a new page
+   - Refreshing a page
+   - Returning to a previously visited tab
+   - Reopening a closed tab
 
 ## Privacy
 
-All data is stored locally in your Chrome browser. No data is sent to external servers. 
+All data is stored locally in your Chrome browser. No data is sent to external servers.
+
+## Version History
+
+### v1.0.1
+- Added visit count tracking for each webpage
+- Improved visit counting for tab switches
+- Added real-time visit count updates
+- Fixed tab switching detection
+- Improved UI with cleaner design
+
+### v1.0.0
+- Initial release
+- Basic time tracking functionality
+  
