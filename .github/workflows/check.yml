@@ -1,0 +1,26 @@
+name: Extension Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Validate manifest.json
+      run: |
+        cat manifest.json | jq empty || (echo "Invalid manifest.json" && exit 1)
+    
+    - name: Check file structure
+      run: |
+        test -f manifest.json || (echo "manifest.json missing" && exit 1)
+        test -f background.js || (echo "background.js missing" && exit 1)
+        test -f popup.html || (echo "popup.html missing" && exit 1)
+        test -f popup.js || (echo "popup.js missing" && exit 1)
+        test -d images || (echo "images directory missing" && exit 1) 
